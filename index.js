@@ -28,71 +28,17 @@ llm.on('exit', (code) => {
 
 
 // well er heres the level system.. id prolly do this a better way but im a lil lazy for that so
+const registerLevelSystem = require('./levels');
+registerLevelSystem(client);
 
-const XP_PER_MESSAGE = 1;
-const LEVELS = Array.from({ length: 200 }, (_, i) => Math.floor(10 * Math.pow(1.5, i)));
 
-const DATA_FILE = './levels.json';
-
-let userData = {};
-
-// load data
-if (fs.existsSync(DATA_FILE)) {
-  userData = JSON.parse(fs.readFileSync(DATA_FILE));
+// this is just sending a message to my server and can be removed if you want
+try {
+  const sendMessageToChat = require('./message');
+  sendMessageToChat(client);
+} catch (err) {
+  console.warn('module ./message.js failed to load:', err.message);
 }
-
-// save data
-function saveData() {
-  fs.writeFileSync(DATA_FILE, JSON.stringify(userData, null, 2));
-}
-
-// get level from XP
-function getLevel(xp) {
-  for (let i = LEVELS.length - 1; i >= 0; i--) {
-    if (xp >= LEVELS[i]) return i;
-  }
-  return 0;
-}
-
-client.on('messageCreate', message => {
-//  if (message.author.bot) return;
-
-  const userId = message.author.id;
-  if (!userData[userId]) {
-    userData[userId] = { xp: 0, level: 0 };
-  }
-
-  userData[userId].xp += XP_PER_MESSAGE;
-  const newLevel = getLevel(userData[userId].xp);
-
-  if (newLevel > userData[userId].level) {
-    userData[userId].level = newLevel;
-    message.channel.send(`${message.author} leveled up to **Level ${newLevel}**`);
-  }
-
-  saveData();
-});
-
-
-client.on('messageCreate', async (message) =>{
-  if (message.channel.id !== "1359131874961916090") return;
-  if (message.author.bot) return;
-  const messageData = {
-    name: message.author.username,
-    message: message.content,
-    type: 'message',
-    timestamp: message.createdTimestamp / 1000,
-    discord: true,
-  };
-
-  try {
-    await axios.post('https://jhorn.net/something.php', messageData);
-    console.log('data send');
-  } catch (error) {
-    console.error('error sending data', error);
-  }
-})
-
 
 const keyword = 'big daddy rat';
 
